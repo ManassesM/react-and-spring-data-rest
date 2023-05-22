@@ -1,6 +1,5 @@
 package com.manadev.reactandspringdatarest.database;
 
-import com.manadev.reactandspringdatarest.entities.Employee;
 import com.manadev.reactandspringdatarest.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -16,6 +15,6 @@ public class DatabaseLoader implements CommandLineRunner {
     }
 
     @Override public void run(String... args) throws Exception {
-        this.repository.save(new Employee("Frodo", "Baggins", "ring bearer"));
+        //        this.repository.save(new Employee("Frodo", "Baggins", "ring bearer"));
     }
 }
