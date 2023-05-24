@@ -34078,12 +34078,13 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = (function (r
 /*!****************************!*\
   !*** ./src/main/js/app.js ***!
   \****************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-
-
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _components_CreateDialog__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/CreateDialog */ "./src/main/js/components/CreateDialog.js");
+/* harmony import */ var _components_EmployeeList__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/EmployeeList */ "./src/main/js/components/EmployeeList.js");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
@@ -34097,9 +34098,12 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var ReactDOM = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
 var client = __webpack_require__(/*! ./client */ "./src/main/js/client.js");
+var follow = __webpack_require__(/*! ./follow */ "./src/main/js/follow.js");
 var root = '/api';
 var App = /*#__PURE__*/function (_React$Component) {
   _inherits(App, _React$Component);
@@ -34120,6 +34124,8 @@ var App = /*#__PURE__*/function (_React$Component) {
     _this.onNavigate = _this.onNavigate.bind(_assertThisInitialized(_this));
     return _this;
   }
+
+  // third methods
   _createClass(App, [{
     key: "loadFromServer",
     value: function loadFromServer(pageSize) {
@@ -34129,51 +34135,51 @@ var App = /*#__PURE__*/function (_React$Component) {
         params: {
           size: pageSize
         }
-      }]).then(function (employeeCollection) {
+      }]).then(function (empCollection) {
         return client({
           method: 'GET',
-          path: employeeCollection.entity._links.profile.href,
+          path: empCollection.entity._links.profile.href,
           headers: {
-            'Accept': 'application/schema+json'
+            Accept: 'application/schema+json'
           }
         }).then(function (schema) {
           _this2.schema = schema.entity;
-          return employeeCollection;
+          return empCollection;
         });
-      }).done(function (employeeCollection) {
+      }).done(function (empCollection) {
         _this2.setState({
-          employees: employeeCollection.entity._embedded.employees,
+          employees: empCollection.entity._embedded.employees,
           attributes: Object.keys(_this2.schema.properties),
           pageSize: pageSize,
-          links: employeeCollection.entity._links
+          links: empCollection.entity._links
         });
       });
     }
   }, {
     key: "onCreate",
-    value: function onCreate(newEmployee) {
+    value: function onCreate(newEmp) {
       var _this3 = this;
-      follow(client, root, ['employees']).then(function (employeeCollection) {
+      follow(client, root, ['employees']).then(function (empCollection) {
         return client({
           method: 'POST',
-          path: employeeCollection.entity._links.self.href,
-          entity: newEmployee,
+          path: empCollection.entity._links.self.href,
+          entity: newEmp,
           headers: {
             'Content-Type': 'application/json'
           }
         });
-      }).then(function (response) {
+      }).then(function (res) {
         return follow(client, root, [{
           rel: 'employees',
           params: {
-            'size': _this3.state.pageSize
+            size: _this3.state.pageSize
           }
         }]);
-      }).done(function (response) {
-        if (typeof response.entity._links.last !== "undefined") {
-          _this3.onNavigate(response.entity._links.last.href);
+      }).done(function (res) {
+        if (typeof res.entity._links.last != 'undefined') {
+          _this3.onNavigate(res.entity._links.last.href);
         } else {
-          _this3.onNavigate(response.entity._links.self.href);
+          _this3.onNavigate(res.entity._links.self.href);
         }
       });
     }
@@ -34184,23 +34190,23 @@ var App = /*#__PURE__*/function (_React$Component) {
       client({
         method: 'DELETE',
         path: employee._links.self.href
-      }).done(function (response) {
+      }).done(function (res) {
         _this4.loadFromServer(_this4.state.pageSize);
       });
     }
   }, {
     key: "onNavigate",
-    value: function onNavigate(navUri) {
+    value: function onNavigate(navURI) {
       var _this5 = this;
       client({
         method: 'GET',
-        path: navUri
-      }).done(function (employeeCollection) {
+        path: navURI
+      }).done(function (empCollection) {
         _this5.setState({
-          employees: employeeCollection.entity._embedded.employees,
+          employees: empCollection.entity._embedded.employees,
           attributes: _this5.state.attributes,
           pageSize: _this5.state.pageSize,
-          links: employeeCollection.entity._links
+          links: empCollection.entity._links
         });
       });
     }
@@ -34211,6 +34217,8 @@ var App = /*#__PURE__*/function (_React$Component) {
         this.loadFromServer(pageSize);
       }
     }
+
+    // lifecycle
   }, {
     key: "componentDidMount",
     value: function componentDidMount() {
@@ -34219,198 +34227,21 @@ var App = /*#__PURE__*/function (_React$Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Hello Spring"), /*#__PURE__*/React.createElement(CreateDialog, {
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "Hello Spring"), /*#__PURE__*/React.createElement(_components_CreateDialog__WEBPACK_IMPORTED_MODULE_0__["default"], {
         attributes: this.state.attributes,
         onCreate: this.onCreate
-      }), /*#__PURE__*/React.createElement(EmployeeList, {
+      }), /*#__PURE__*/React.createElement(_components_EmployeeList__WEBPACK_IMPORTED_MODULE_1__["default"], {
         employees: this.state.employees,
         links: this.state.links,
         pageSize: this.state.pageSize,
-        onNavigate: this.onNavigate,
+        onNavigate: this.state.onNavigate,
         onDelete: this.onDelete,
         updatePageSize: this.updatePageSize
       }));
     }
   }]);
   return App;
-}(React.Component);
-var CreateDialog = /*#__PURE__*/function (_React$Component2) {
-  _inherits(CreateDialog, _React$Component2);
-  var _super2 = _createSuper(CreateDialog);
-  function CreateDialog(props) {
-    var _this6;
-    _classCallCheck(this, CreateDialog);
-    _this6 = _super2.call(this, props);
-    _this6.handleSubmit = _this6.handleSubmit.bind(_assertThisInitialized(_this6));
-    return _this6;
-  }
-  _createClass(CreateDialog, [{
-    key: "handleSubmit",
-    value: function handleSubmit(e) {
-      var _this7 = this;
-      e.preventDefault();
-      var newEmployee = {};
-      this.props.attributes.forEach(function (attribute) {
-        newEmployee[attribute] = ReactDOM.findDOMNode(_this7.refs[attribute]).value.trim();
-      });
-      this.props.onCreate(newEmployee);
-
-      // clear out the dialog's inputs
-      this.props.attributes.forEach(function (attribute) {
-        ReactDOM.findDOMNode(_this7.refs[attribute]).value = '';
-      });
-
-      // Navigate away from the dialog to hide it.
-      window.location = "#";
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var inputs = this.props.attributes.map(function (attribute) {
-        return /*#__PURE__*/React.createElement("p", {
-          key: attribute
-        }, /*#__PURE__*/React.createElement("input", {
-          type: "text",
-          placeholder: attribute,
-          ref: attribute,
-          className: "field"
-        }));
-      });
-      return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("a", {
-        href: "#createEmployee"
-      }, "Create"), /*#__PURE__*/React.createElement("div", {
-        id: "createEmployee",
-        className: "modalDialog"
-      }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("a", {
-        href: "#",
-        title: "Close",
-        className: "close"
-      }, "X"), /*#__PURE__*/React.createElement("h2", null, "Create new employee"), /*#__PURE__*/React.createElement("form", null, inputs, /*#__PURE__*/React.createElement("button", {
-        onClick: this.handleSubmit
-      }, "Create")))));
-    }
-  }]);
-  return CreateDialog;
-}(React.Component);
-var EmployeeList = /*#__PURE__*/function (_React$Component3) {
-  _inherits(EmployeeList, _React$Component3);
-  var _super3 = _createSuper(EmployeeList);
-  function EmployeeList(props) {
-    var _this8;
-    _classCallCheck(this, EmployeeList);
-    _this8 = _super3.call(this, props);
-    _this8.handleNavFirst = _this8.handleNavFirst.bind(_assertThisInitialized(_this8));
-    _this8.handleNavPrev = _this8.handleNavPrev.bind(_assertThisInitialized(_this8));
-    _this8.handleNavNext = _this8.handleNavNext.bind(_assertThisInitialized(_this8));
-    _this8.handleNavLast = _this8.handleNavLast.bind(_assertThisInitialized(_this8));
-    _this8.handleInput = _this8.handleInput.bind(_assertThisInitialized(_this8));
-    return _this8;
-  }
-  _createClass(EmployeeList, [{
-    key: "handleInput",
-    value: function handleInput(e) {
-      e.preventDefault();
-      var pageSize = ReactDOM.findDOMNode(this.refs.pageSize).value;
-      if (/^[0-9]+$/.test(pageSize)) {
-        this.props.updatePageSize(pageSize);
-      } else {
-        ReactDOM.findDOMNode(this.refs.pageSize).value = pageSize.substring(0, pageSize.length - 1);
-      }
-    }
-  }, {
-    key: "handleNavFirst",
-    value: function handleNavFirst(e) {
-      e.preventDefault();
-      this.props.onNavigate(this.props.links.first.href);
-    }
-  }, {
-    key: "handleNavPrev",
-    value: function handleNavPrev(e) {
-      e.preventDefault();
-      this.props.onNavigate(this.props.links.prev.href);
-    }
-  }, {
-    key: "handleNavNext",
-    value: function handleNavNext(e) {
-      e.preventDefault();
-      this.props.onNavigate(this.props.links.next.href);
-    }
-  }, {
-    key: "handleNavLast",
-    value: function handleNavLast(e) {
-      e.preventDefault();
-      this.props.onNavigate(this.props.links.last.href);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this9 = this;
-      var employees = this.props.employees.map(function (employee) {
-        return /*#__PURE__*/React.createElement(Employee, {
-          key: employee._links.self.href,
-          employee: employee,
-          onDelete: _this9.props.onDelete
-        });
-      });
-      var navLinks = [];
-      if ("first" in this.props.links) {
-        navLinks.push( /*#__PURE__*/React.createElement("button", {
-          key: "first",
-          onClick: this.handleNavFirst
-        }, "<<"));
-      }
-      if ("prev" in this.props.links) {
-        navLinks.push( /*#__PURE__*/React.createElement("button", {
-          key: "prev",
-          onClick: this.handleNavPrev
-        }, "<"));
-      }
-      if ("next" in this.props.links) {
-        navLinks.push( /*#__PURE__*/React.createElement("button", {
-          key: "next",
-          onClick: this.handleNavNext
-        }, ">"));
-      }
-      if ("last" in this.props.links) {
-        navLinks.push( /*#__PURE__*/React.createElement("button", {
-          key: "last",
-          onClick: this.handleNavLast
-        }, ">>"));
-      }
-      return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
-        ref: "pageSize",
-        defaultValue: this.props.pageSize,
-        onInput: this.handleInput
-      }), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "First Name"), /*#__PURE__*/React.createElement("th", null, "Last Name"), /*#__PURE__*/React.createElement("th", null, "Description"), /*#__PURE__*/React.createElement("th", null)), employees)), /*#__PURE__*/React.createElement("div", null, navLinks));
-    }
-  }]);
-  return EmployeeList;
-}(React.Component);
-var Employee = /*#__PURE__*/function (_React$Component4) {
-  _inherits(Employee, _React$Component4);
-  var _super4 = _createSuper(Employee);
-  function Employee(props) {
-    var _this10;
-    _classCallCheck(this, Employee);
-    _this10 = _super4.call(this, props);
-    _this10.handleDelete = _this10.handleDelete.bind(_assertThisInitialized(_this10));
-    return _this10;
-  }
-  _createClass(Employee, [{
-    key: "handleDelete",
-    value: function handleDelete() {
-      this.props.onDelete(this.props.employee);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, this.props.employee.firstName), /*#__PURE__*/React.createElement("td", null, this.props.employee.lastName), /*#__PURE__*/React.createElement("td", null, this.props.employee.description), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-        onClick: this.handleDelete
-      }, "Delete")));
-    }
-  }]);
-  return Employee;
-}(React.Component);
+}(React.Component); // render
 ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById('react'));
 
 /***/ }),
@@ -34438,9 +34269,305 @@ module.exports = rest.wrap(mime, {
   registry: registry
 }).wrap(uriTemplateInterceptor).wrap(errorCode).wrap(defaultRequest, {
   headers: {
-    'Accept': 'application/hal+json'
+    Accept: 'application/hal+json'
   }
 });
+
+/***/ }),
+
+/***/ "./src/main/js/components/CreateDialog.js":
+/*!************************************************!*\
+  !*** ./src/main/js/components/CreateDialog.js ***!
+  \************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var ReactDOM = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+var CreateDialog = /*#__PURE__*/function (_React$Component) {
+  _inherits(CreateDialog, _React$Component);
+  var _super = _createSuper(CreateDialog);
+  function CreateDialog(props) {
+    var _this;
+    _classCallCheck(this, CreateDialog);
+    _this = _super.call(this, props);
+    _this.handleSubmit = _this.handleSubmit.bind(_assertThisInitialized(_this));
+    return _this;
+  }
+  _createClass(CreateDialog, [{
+    key: "handleSubmit",
+    value: function handleSubmit(e) {
+      var _this2 = this;
+      e.preventDefault();
+      var newEmployee = {};
+      this.props.attributes.forEach(function (att) {
+        newEmployee[att] = ReactDOM.findDOMNode(_this2.refs[att]).value.trim();
+      });
+      this.props.onCreate(newEmployee);
+      this.props.attributes.forEach(function (att) {
+        ReactDOM.findDOMNode(_this2.refs[att]).value = '';
+      });
+
+      // hide dialog by navigating away
+      window.location = '#';
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var inputs = this.props.attributes.map(function (att) {
+        return /*#__PURE__*/React.createElement("p", {
+          key: att
+        }, /*#__PURE__*/React.createElement("input", {
+          type: "text",
+          placeholder: att,
+          ref: att,
+          className: "field"
+        }));
+      });
+      return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("a", {
+        href: "#createEmployee"
+      }, "Create"), /*#__PURE__*/React.createElement("div", {
+        id: "createEmployee",
+        className: "modalDialog"
+      }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        title: "Close",
+        className: "close"
+      }, "X"), /*#__PURE__*/React.createElement("h2", null, "Create new employee"), /*#__PURE__*/React.createElement("form", null, inputs, /*#__PURE__*/React.createElement("button", {
+        onClick: this.handleSubmit
+      }, "Create")))));
+    }
+  }]);
+  return CreateDialog;
+}(React.Component);
+/* harmony default export */ __webpack_exports__["default"] = (CreateDialog);
+
+/***/ }),
+
+/***/ "./src/main/js/components/Employee.js":
+/*!********************************************!*\
+  !*** ./src/main/js/components/Employee.js ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var Employee = /*#__PURE__*/function (_React$Component) {
+  _inherits(Employee, _React$Component);
+  var _super = _createSuper(Employee);
+  function Employee(props) {
+    var _this;
+    _classCallCheck(this, Employee);
+    _this = _super.call(this, props);
+    _this.handleDelete = _this.handleDelete.bind(_assertThisInitialized(_this));
+    return _this;
+  }
+  _createClass(Employee, [{
+    key: "handleDelete",
+    value: function handleDelete() {
+      this.props.onDelete(this.props.employee);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, this.props.employee.firstName), /*#__PURE__*/React.createElement("td", null, this.props.employee.lastName), /*#__PURE__*/React.createElement("td", null, this.props.employee.description), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+        onClick: this.handleDelete
+      }, "Delete")));
+    }
+  }]);
+  return Employee;
+}(React.Component);
+/* harmony default export */ __webpack_exports__["default"] = (Employee);
+
+/***/ }),
+
+/***/ "./src/main/js/components/EmployeeList.js":
+/*!************************************************!*\
+  !*** ./src/main/js/components/EmployeeList.js ***!
+  \************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Employee__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Employee */ "./src/main/js/components/Employee.js");
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var EmployeeList = /*#__PURE__*/function (_React$Component) {
+  _inherits(EmployeeList, _React$Component);
+  var _super = _createSuper(EmployeeList);
+  function EmployeeList(props) {
+    var _this;
+    _classCallCheck(this, EmployeeList);
+    _this = _super.call(this, props);
+    _this.handleNavFirst = _this.handleNavFirst.bind(_assertThisInitialized(_this));
+    _this.handleNavPrev = _this.handleNavPrev.bind(_assertThisInitialized(_this));
+    _this.handleNavNext = _this.handleNavNext.bind(_assertThisInitialized(_this));
+    _this.handleNavLast = _this.handleNavLast.bind(_assertThisInitialized(_this));
+    _this.handleInput = _this.handleInput.bind(_assertThisInitialized(_this));
+    return _this;
+  }
+  _createClass(EmployeeList, [{
+    key: "handleNavFirst",
+    value: function handleNavFirst(e) {
+      e.preventDefault();
+      this.props.onNavigate(this.props.links.first.href);
+    }
+  }, {
+    key: "handleNavPrev",
+    value: function handleNavPrev(e) {
+      e.preventDefault();
+      this.props.onNavigate(this.props.links.prev.href);
+    }
+  }, {
+    key: "handleNavNext",
+    value: function handleNavNext(e) {
+      e.preventDefault();
+      this.props.onNavigate(this.props.links.next.href);
+    }
+  }, {
+    key: "handleNavLast",
+    value: function handleNavLast(e) {
+      e.preventDefault();
+      this.props.onNavigate(this.props.links.last.href);
+    }
+  }, {
+    key: "handleInput",
+    value: function handleInput(e) {
+      e.preventDefault();
+      var pageSize = ReactDOM.findDOMNode(this.refs.pageSize).value;
+      if (/^[0-9]+$/.test(pageSize)) {
+        this.props.updatePageSize(pageSize);
+      } else {
+        ReactDOM.findDOMNode(this.refs.pageSize).value = pageSize.substring(0, pageSize.length - 1);
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this2 = this;
+      var employees = this.props.employees.map(function (employee) {
+        return /*#__PURE__*/React.createElement(_Employee__WEBPACK_IMPORTED_MODULE_0__["default"], {
+          key: employee._links.self.href,
+          employee: employee,
+          onDelete: _this2.props.onDelete
+        });
+      });
+      var navLinks = [];
+      if ('first' in this.props.links) navLinks.push( /*#__PURE__*/React.createElement("button", {
+        key: "first",
+        onClick: this.handleNavFirst
+      }, "<<"));
+      if ('prev' in this.props.links) navLinks.push( /*#__PURE__*/React.createElement("button", {
+        key: "prev",
+        onClick: this.handleNavPrev
+      }, "<"));
+      if ('next' in this.props.links) navLinks.push( /*#__PURE__*/React.createElement("button", {
+        key: "next",
+        onClick: this.handleNavNext
+      }, ">"));
+      if ('last' in this.props.links) navLinks.push( /*#__PURE__*/React.createElement("button", {
+        key: "last",
+        onClick: this.handleNavLast
+      }, ">>"));
+      return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+        ref: "pageSize",
+        defaultValue: this.props.pageSize,
+        onInput: this.handleInput
+      }), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "First Name"), /*#__PURE__*/React.createElement("th", null, "Last Name"), /*#__PURE__*/React.createElement("th", null, "Description"), /*#__PURE__*/React.createElement("th", null)), employees)), /*#__PURE__*/React.createElement("div", null, navLinks));
+    }
+  }]);
+  return EmployeeList;
+}(React.Component);
+/* harmony default export */ __webpack_exports__["default"] = (EmployeeList);
+
+/***/ }),
+
+/***/ "./src/main/js/follow.js":
+/*!*******************************!*\
+  !*** ./src/main/js/follow.js ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = function follow(api, rootPath, relArray) {
+  var root = api({
+    method: 'GET',
+    path: rootPath
+  });
+  return relArray.reduce(function (root, arrayItem) {
+    var rel = typeof arrayItem === 'string' ? arrayItem : arrayItem.rel;
+    return traverseNext(root, rel, arrayItem);
+  }, root);
+  function traverseNext(root, rel, arrayItem) {
+    return root.then(function (response) {
+      if (hasEmbeddedRel(response.entity, rel)) {
+        return response.entity._embedded[rel];
+      }
+      if (!response.entity._links) {
+        return [];
+      }
+      if (typeof arrayItem === 'string') {
+        return api({
+          method: 'GET',
+          path: response.entity._links[rel].href
+        });
+      } else {
+        return api({
+          method: 'GET',
+          path: response.entity._links[rel].href,
+          params: arrayItem.params
+        });
+      }
+    });
+  }
+  function hasEmbeddedRel(entity, rel) {
+    return entity._embedded && entity._embedded.hasOwnProperty(rel);
+  }
+};
 
 /***/ }),
 
