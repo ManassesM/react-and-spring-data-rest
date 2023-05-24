@@ -48,8 +48,10 @@ class EmployeeList extends React.Component {
 	render() {
 		const employees = this.props.employees.map((employee) => (
 			<Employee
-				key={employee._links.self.href}
+				key={employee.entity._links.self.href}
 				employee={employee}
+				attributes={this.props.attributes}
+				onUpdate={this.props.onUpdate}
 				onDelete={this.props.onDelete}
 			/>
 		))

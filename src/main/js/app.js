@@ -5,6 +5,7 @@ const React = require('react')
 const ReactDOM = require('react-dom')
 const client = require('./client')
 const follow = require('./follow')
+const when = require('when')
 
 const root = '/api'
 
@@ -28,15 +29,25 @@ class App extends React.Component {
 					headers: { Accept: 'application/schema+json' },
 				}).then((schema) => {
 					this.schema = schema.entity
+					this.links = empCollection.entity._links
 					return empCollection
 				})
 			})
-			.done((empCollection) => {
+			.then((empCollection) => {
+				return empCollection.entity._embedded.employees.map((emp) =>
+					client({
+						method: 'GET',
+						path: emp._links.self.href,
+					})
+				)
+			})
+			.then((empPromises) => when.all(empPromises))
+			.done((employees) => {
 				this.setState({
-					employees: empCollection.entity._embedded.employees,
+					employees,
 					attributes: Object.keys(this.schema.properties),
 					pageSize: pageSize,
-					links: empCollection.entity._links,
+					links: this.links,
 				})
 			})
 	}
@@ -69,6 +80,31 @@ class App extends React.Component {
 		client({ method: 'DELETE', path: employee._links.self.href }).done(
 			(res) => {
 				this.loadFromServer(this.state.pageSize)
+			}
+		)
+	}
+
+	onUpdate(employee, updatedEmployee) {
+		client({
+			method: 'PUT',
+			path: employee.entity._links.self.href,
+			entity: updatedEmployee,
+			headers: {
+				'Content-Type': 'application/json',
+				'If-Match': employee.headers.Etag,
+			},
+		}).done(
+			() => {
+				this.loadFromServer(this.state.pageSize)
+			},
+			(res) => {
+				if (res.status.code === 412) {
+					alert(
+						'DENIED: Unable to update ' +
+							employee.entity._links.self.href +
+							'. Your copy is stale.'
+					)
+				}
 			}
 		)
 	}
@@ -107,9 +143,10 @@ class App extends React.Component {
 					employees={this.state.employees}
 					links={this.state.links}
 					pageSize={this.state.pageSize}
-					onNavigate={this.state.onNavigate}
+					onNavigate={this.onNavigate}
 					onDelete={this.onDelete}
 					updatePageSize={this.updatePageSize}
+					attributes={this.state.attributes}
 				/>
 			</>
 		)

@@ -34104,6 +34104,7 @@ var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var ReactDOM = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
 var client = __webpack_require__(/*! ./client */ "./src/main/js/client.js");
 var follow = __webpack_require__(/*! ./follow */ "./src/main/js/follow.js");
+var when = __webpack_require__(/*! when */ "./node_modules/when/when.js");
 var root = '/api';
 var App = /*#__PURE__*/function (_React$Component) {
   _inherits(App, _React$Component);
@@ -34144,14 +34145,24 @@ var App = /*#__PURE__*/function (_React$Component) {
           }
         }).then(function (schema) {
           _this2.schema = schema.entity;
+          _this2.links = empCollection.entity._links;
           return empCollection;
         });
-      }).done(function (empCollection) {
+      }).then(function (empCollection) {
+        return empCollection.entity._embedded.employees.map(function (emp) {
+          return client({
+            method: 'GET',
+            path: emp._links.self.href
+          });
+        });
+      }).then(function (empPromises) {
+        return when.all(empPromises);
+      }).done(function (employees) {
         _this2.setState({
-          employees: empCollection.entity._embedded.employees,
+          employees: employees,
           attributes: Object.keys(_this2.schema.properties),
           pageSize: pageSize,
-          links: empCollection.entity._links
+          links: _this2.links
         });
       });
     }
@@ -34195,17 +34206,37 @@ var App = /*#__PURE__*/function (_React$Component) {
       });
     }
   }, {
+    key: "onUpdate",
+    value: function onUpdate(employee, updatedEmployee) {
+      var _this5 = this;
+      client({
+        method: 'PUT',
+        path: employee.entity._links.self.href,
+        entity: updatedEmployee,
+        headers: {
+          'Content-Type': 'application/json',
+          'If-Match': employee.headers.Etag
+        }
+      }).done(function () {
+        _this5.loadFromServer(_this5.state.pageSize);
+      }, function (res) {
+        if (res.status.code === 412) {
+          alert('DENIED: Unable to update ' + employee.entity._links.self.href + '. Your copy is stale.');
+        }
+      });
+    }
+  }, {
     key: "onNavigate",
     value: function onNavigate(navURI) {
-      var _this5 = this;
+      var _this6 = this;
       client({
         method: 'GET',
         path: navURI
       }).done(function (empCollection) {
-        _this5.setState({
+        _this6.setState({
           employees: empCollection.entity._embedded.employees,
-          attributes: _this5.state.attributes,
-          pageSize: _this5.state.pageSize,
+          attributes: _this6.state.attributes,
+          pageSize: _this6.state.pageSize,
           links: empCollection.entity._links
         });
       });
@@ -34234,9 +34265,10 @@ var App = /*#__PURE__*/function (_React$Component) {
         employees: this.state.employees,
         links: this.state.links,
         pageSize: this.state.pageSize,
-        onNavigate: this.state.onNavigate,
+        onNavigate: this.onNavigate,
         onDelete: this.onDelete,
-        updatePageSize: this.updatePageSize
+        updatePageSize: this.updatePageSize,
+        attributes: this.state.attributes
       }));
     }
   }]);
@@ -34368,6 +34400,7 @@ var CreateDialog = /*#__PURE__*/function (_React$Component) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _UpdateDialog__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./UpdateDialog */ "./src/main/js/components/UpdateDialog.js");
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
@@ -34381,6 +34414,7 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 var Employee = /*#__PURE__*/function (_React$Component) {
   _inherits(Employee, _React$Component);
@@ -34400,7 +34434,11 @@ var Employee = /*#__PURE__*/function (_React$Component) {
   }, {
     key: "render",
     value: function render() {
-      return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, this.props.employee.firstName), /*#__PURE__*/React.createElement("td", null, this.props.employee.lastName), /*#__PURE__*/React.createElement("td", null, this.props.employee.description), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+      return /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, this.props.employee.firstName), /*#__PURE__*/React.createElement("td", null, this.props.employee.lastName), /*#__PURE__*/React.createElement("td", null, this.props.employee.description), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement(_UpdateDialog__WEBPACK_IMPORTED_MODULE_0__["default"], {
+        employee: this.props.employee,
+        attributes: this.props.attributes,
+        onUpdate: this.props.onUpdate
+      })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
         onClick: this.handleDelete
       }, "Delete")));
     }
@@ -34491,8 +34529,10 @@ var EmployeeList = /*#__PURE__*/function (_React$Component) {
       var _this2 = this;
       var employees = this.props.employees.map(function (employee) {
         return /*#__PURE__*/React.createElement(_Employee__WEBPACK_IMPORTED_MODULE_0__["default"], {
-          key: employee._links.self.href,
+          key: employee.entity._links.self.href,
           employee: employee,
+          attributes: _this2.props.attributes,
+          onUpdate: _this2.props.onUpdate,
           onDelete: _this2.props.onDelete
         });
       });
@@ -34523,6 +34563,90 @@ var EmployeeList = /*#__PURE__*/function (_React$Component) {
   return EmployeeList;
 }(React.Component);
 /* harmony default export */ __webpack_exports__["default"] = (EmployeeList);
+
+/***/ }),
+
+/***/ "./src/main/js/components/UpdateDialog.js":
+/*!************************************************!*\
+  !*** ./src/main/js/components/UpdateDialog.js ***!
+  \************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+var React = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+var ReactDOM = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+var UpdateDialog = /*#__PURE__*/function (_React$Component) {
+  _inherits(UpdateDialog, _React$Component);
+  var _super = _createSuper(UpdateDialog);
+  function UpdateDialog(props) {
+    var _this;
+    _classCallCheck(this, UpdateDialog);
+    _this = _super.call(this, props);
+    _this.handleSubmit = _this.handleSubmit.bind(_assertThisInitialized(_this));
+    return _this;
+  }
+  _createClass(UpdateDialog, [{
+    key: "handleSubmit",
+    value: function handleSubmit(e) {
+      var _this2 = this;
+      e.preventDefault();
+      var updateEmployee = {};
+      this.props.attributes.forEach(function (attribute) {
+        updateEmployee[attribute] = ReactDOM.findDOMNode(_this2.refs[attribute]).value.trim();
+      });
+      this.props.onUpdate(this.props.employee, updateEmployee);
+      window.location = '#';
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      var _this3 = this;
+      var inputs = this.props.attributes.map(function (attribute) {
+        return /*#__PURE__*/React.createElement("p", {
+          key: _this3.props.employee.entity[attribute]
+        }, /*#__PURE__*/React.createElement("input", {
+          type: "text",
+          placeholder: attribute,
+          defaultValue: _this3.props.employee.entity[attribute],
+          ref: attribute,
+          className: "field"
+        }));
+      });
+      var dialogId = 'updateEmployee-' + this.props.employee.entity._links.self.href;
+      return /*#__PURE__*/React.createElement("div", {
+        key: this.props.employee.entity._links.self.href
+      }, /*#__PURE__*/React.createElement("a", {
+        href: '#' + dialogId
+      }, "Update"), /*#__PURE__*/React.createElement("div", {
+        id: dialogId,
+        className: "modalDialog"
+      }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        title: "Close",
+        className: "close"
+      }, "X"), /*#__PURE__*/React.createElement("h2", null, "Update an employee"), /*#__PURE__*/React.createElement("form", null, inputs, /*#__PURE__*/React.createElement("button", {
+        onClick: this.handleSubmit
+      }, "Update")))));
+    }
+  }]);
+  return UpdateDialog;
+}(React.Component);
+/* harmony default export */ __webpack_exports__["default"] = (UpdateDialog);
 
 /***/ }),
 

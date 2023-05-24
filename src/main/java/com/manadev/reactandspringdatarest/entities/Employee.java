@@ -1,8 +1,10 @@
 package com.manadev.reactandspringdatarest.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import java.util.Objects;
 
@@ -13,6 +15,8 @@ public class Employee {
     private                     String firstName;
     private                     String lastName;
     private                     String description;
+
+    private @Version @JsonIgnore Long version;
 
     private Employee() {}
 
@@ -26,11 +30,11 @@ public class Employee {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Employee employee = (Employee) o;
-        return Objects.equals(id, employee.id) && Objects.equals(firstName, employee.firstName) && Objects.equals(lastName, employee.lastName) && Objects.equals(description, employee.description);
+        return Objects.equals(id, employee.id) && Objects.equals(firstName, employee.firstName) && Objects.equals(lastName, employee.lastName) && Objects.equals(description, employee.description) && Objects.equals(version, employee.version);
     }
 
     @Override public int hashCode() {
-        return Objects.hash(id, firstName, lastName, description);
+        return Objects.hash(id, firstName, lastName, description, version);
     }
 
     public Long getId() {
@@ -65,7 +69,15 @@ public class Employee {
         this.description = description;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
     @Override public String toString() {
-        return "Employee{" + "id=" + id + ", firstName='" + firstName + '\'' + ", lastName='" + lastName + '\'' + ", description='" + description + '\'' + '}';
+        return "Employee{" + "id=" + id + ", firstName='" + firstName + '\'' + ", lastName='" + lastName + '\'' + ", description='" + description + '\'' + ", version=" + version + '}';
     }
 }
