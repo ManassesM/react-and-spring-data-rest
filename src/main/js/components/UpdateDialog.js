@@ -9,15 +9,13 @@ class UpdateDialog extends React.Component {
 
 	handleSubmit(e) {
 		e.preventDefault()
-		const updateEmployee = {}
-
+		const updatedEmployee = {}
 		this.props.attributes.forEach((attribute) => {
-			updateEmployee[attribute] = ReactDOM.findDOMNode(
+			updatedEmployee[attribute] = ReactDOM.findDOMNode(
 				this.refs[attribute]
 			).value.trim()
 		})
-
-		this.props.onUpdate(this.props.employee, updateEmployee)
+		this.props.onUpdate(this.props.employee, updatedEmployee)
 		window.location = '#'
 	}
 

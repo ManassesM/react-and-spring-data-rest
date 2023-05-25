@@ -15,9 +15,9 @@ class Employee extends React.Component {
 	render() {
 		return (
 			<tr>
-				<td>{this.props.employee.firstName}</td>
-				<td>{this.props.employee.lastName}</td>
-				<td>{this.props.employee.description}</td>
+				<td>{this.props.employee.entity.firstName}</td>
+				<td>{this.props.employee.entity.lastName}</td>
+				<td>{this.props.employee.entity.description}</td>
 				<td>
 					<UpdateDialog
 						employee={this.props.employee}

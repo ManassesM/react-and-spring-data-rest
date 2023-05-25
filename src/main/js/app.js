@@ -22,49 +22,49 @@ class App extends React.Component {
 	// third methods
 	loadFromServer(pageSize) {
 		follow(client, root, [{ rel: 'employees', params: { size: pageSize } }])
-			.then((empCollection) => {
-				return client({
+			.then(async (employeeCollection) => {
+				const schema = await client({
 					method: 'GET',
-					path: empCollection.entity._links.profile.href,
+					path: employeeCollection.entity._links.profile.href,
 					headers: { Accept: 'application/schema+json' },
-				}).then((schema) => {
-					this.schema = schema.entity
-					this.links = empCollection.entity._links
-					return empCollection
 				})
+				this.schema = schema.entity
+				this.links = employeeCollection.entity._links
+				return employeeCollection
 			})
-			.then((empCollection) => {
-				return empCollection.entity._embedded.employees.map((emp) =>
+			.then((employeeCollection) => {
+				return employeeCollection.entity._embedded.employees.map((employee) =>
 					client({
 						method: 'GET',
-						path: emp._links.self.href,
+						path: employee._links.self.href,
 					})
 				)
 			})
-			.then((empPromises) => when.all(empPromises))
+			.then((employeePromises) => when.all(employeePromises))
 			.done((employees) => {
 				this.setState({
 					employees,
 					attributes: Object.keys(this.schema.properties),
-					pageSize: pageSize,
+					pageSize,
 					links: this.links,
 				})
 			})
 	}
 
-	onCreate(newEmp) {
+	onCreate(newEmployee) {
+		const self = this
 		follow(client, root, ['employees'])
-			.then((empCollection) => {
+			.then((res) => {
 				return client({
 					method: 'POST',
-					path: empCollection.entity._links.self.href,
-					entity: newEmp,
+					path: res.entity._links.self.href,
+					entity: newEmployee,
 					headers: { 'Content-Type': 'application/json' },
 				})
 			})
 			.then((res) => {
 				return follow(client, root, [
-					{ rel: 'employees', params: { size: this.state.pageSize } },
+					{ rel: 'employees', params: { size: self.state.pageSize } },
 				])
 			})
 			.done((res) => {
@@ -77,8 +77,8 @@ class App extends React.Component {
 	}
 
 	onDelete(employee) {
-		client({ method: 'DELETE', path: employee._links.self.href }).done(
-			(res) => {
+		client({ method: 'DELETE', path: employee.entity._links.self.href }).done(
+			() => {
 				this.loadFromServer(this.state.pageSize)
 			}
 		)
@@ -97,8 +97,8 @@ class App extends React.Component {
 			() => {
 				this.loadFromServer(this.state.pageSize)
 			},
-			(res) => {
-				if (res.status.code === 412) {
+			(response) => {
+				if (response.status.code === 412) {
 					alert(
 						'DENIED: Unable to update ' +
 							employee.entity._links.self.href +
@@ -110,14 +110,28 @@ class App extends React.Component {
 	}
 
 	onNavigate(navURI) {
-		client({ method: 'GET', path: navURI }).done((empCollection) => {
-			this.setState({
-				employees: empCollection.entity._embedded.employees,
-				attributes: this.state.attributes,
-				pageSize: this.state.pageSize,
-				links: empCollection.entity._links,
+		client({ method: 'GET', path: navURI })
+			.then((employeeCollection) => {
+				this.links = employeeCollection.entity._links
+
+				return employeeCollection.entity._embedded.employees.map((employee) =>
+					client({
+						method: 'GET',
+						path: employee._links.self.href,
+					})
+				)
 			})
-		})
+			.then((employeePromises) => {
+				return when.all(employeePromises)
+			})
+			.done((employees) => {
+				this.setState({
+					employees: employees,
+					attributes: Object.keys(this.schema.properties),
+					pageSize: this.state.pageSize,
+					links: this.links,
+				})
+			})
 	}
 
 	updatePageSize(pageSize) {
@@ -133,7 +147,7 @@ class App extends React.Component {
 
 	render() {
 		return (
-			<>
+			<div>
 				<p>Hello Spring</p>
 				<CreateDialog
 					attributes={this.state.attributes}
@@ -144,11 +158,12 @@ class App extends React.Component {
 					links={this.state.links}
 					pageSize={this.state.pageSize}
 					onNavigate={this.onNavigate}
+					onUpdate={this.onUpdate}
 					onDelete={this.onDelete}
 					updatePageSize={this.updatePageSize}
 					attributes={this.state.attributes}
 				/>
-			</>
+			</div>
 		)
 	}
 }

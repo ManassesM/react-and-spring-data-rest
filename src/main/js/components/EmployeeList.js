@@ -1,6 +1,7 @@
 import Employee from './Employee'
 
 const React = require('react')
+const ReactDOM = require('react-dom')
 
 class EmployeeList extends React.Component {
 	constructor(props) {
