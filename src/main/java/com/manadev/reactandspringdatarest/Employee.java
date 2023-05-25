@@ -1,4 +1,4 @@
-package com.manadev.reactandspringdatarest.entities;
+package com.manadev.reactandspringdatarest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;

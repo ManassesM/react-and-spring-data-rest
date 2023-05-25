@@ -1,6 +1,5 @@
-package com.manadev.reactandspringdatarest.repositories;
+package com.manadev.reactandspringdatarest;
 
-import com.manadev.reactandspringdatarest.entities.Employee;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

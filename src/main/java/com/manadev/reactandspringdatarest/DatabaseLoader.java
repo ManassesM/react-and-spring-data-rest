@@ -1,7 +1,5 @@
-package com.manadev.reactandspringdatarest.database;
+package com.manadev.reactandspringdatarest;
 
-import com.manadev.reactandspringdatarest.entities.Employee;
-import com.manadev.reactandspringdatarest.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

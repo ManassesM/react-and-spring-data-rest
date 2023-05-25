@@ -6,6 +6,7 @@ const ReactDOM = require('react-dom')
 const client = require('./client')
 const follow = require('./follow')
 const when = require('when')
+const stompClient = require('./websocket-listener')
 
 const root = '/api'
 
@@ -17,6 +18,8 @@ class App extends React.Component {
 		this.onCreate = this.onCreate.bind(this)
 		this.onDelete = this.onDelete.bind(this)
 		this.onNavigate = this.onNavigate.bind(this)
+		this.refreshCurrentPage = this.refreshCurrentPage.bind(this)
+		this.refreshAndGoToLastPage = this.refreshAndGoToLastPage.bind(this)
 	}
 
 	// third methods
@@ -52,28 +55,14 @@ class App extends React.Component {
 	}
 
 	onCreate(newEmployee) {
-		const self = this
-		follow(client, root, ['employees'])
-			.then((res) => {
-				return client({
-					method: 'POST',
-					path: res.entity._links.self.href,
-					entity: newEmployee,
-					headers: { 'Content-Type': 'application/json' },
-				})
+		follow(client, root, ['employees']).done((res) => {
+			return client({
+				method: 'POST',
+				path: res.entity._links.self.href,
+				entity: newEmployee,
+				headers: { 'Content-Type': 'application/json' },
 			})
-			.then((res) => {
-				return follow(client, root, [
-					{ rel: 'employees', params: { size: self.state.pageSize } },
-				])
-			})
-			.done((res) => {
-				if (typeof res.entity._links.last != 'undefined') {
-					this.onNavigate(res.entity._links.last.href)
-				} else {
-					this.onNavigate(res.entity._links.self.href)
-				}
-			})
+		})
 	}
 
 	onDelete(employee) {
@@ -140,9 +129,64 @@ class App extends React.Component {
 		}
 	}
 
+	refreshAndGoToLastPage(message) {
+		follow(client, root, [
+			{
+				rel: 'employees',
+				params: { size: this.state.pageSize },
+			},
+		]).done((res) => {
+			if (res.entity._links.last !== undefined) {
+				this.onNavigate(res.entity._links.last.href)
+			} else {
+				this.onNavigate(res.entity._links.self.href)
+			}
+		})
+	}
+
+	refreshCurrentPage(message) {
+		follow(client, root, [
+			{
+				rel: 'employees',
+				params: {
+					size: this.state.pageSize,
+					page: this.state.page.number,
+				},
+			},
+		])
+			.then((employeeCollection) => {
+				this.links = employeeCollection.entity._links
+				this.page = employeeCollection.entity.page
+
+				return employeeCollection.entity._embedded.employees.map((employee) => {
+					return client({
+						method: 'GET',
+						path: employee._links.self.href,
+					})
+				})
+			})
+			.then((employeePromises) => {
+				return when.all(employeePromises)
+			})
+			.then((employees) => {
+				this.setState({
+					page: this.page,
+					employees: employees,
+					attributes: Object.keys(this.schema.properties),
+					pageSize: this.state.pageSize,
+					links: this.links,
+				})
+			})
+	}
+
 	// lifecycle
 	componentDidMount() {
 		this.loadFromServer(this.state.pageSize)
+		stompClient.register([
+			{ route: '/topic/newEmployee', callback: this.refreshAndGoToLastPage },
+			{ route: '/topic/updateEmployee', callback: this.refreshCurrentPage },
+			{ route: '/topic/deleteEmployee', callback: this.refreshCurrentPage },
+		])
 	}
 
 	render() {
